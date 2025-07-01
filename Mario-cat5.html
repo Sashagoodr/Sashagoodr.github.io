@@ -409,35 +409,30 @@
                     cat.y + cat.height > enemy.y && 
                     cat.y < enemy.y + enemy.height) {
                     
-                    // Определяем, касается ли кот врага снизу
-                    const isHittingFromBelow = (cat.y + cat.height) - enemy.y < 10 && 
-                                              cat.velocityY >= 0;
-                    
-                    // Если кот снизу врага - получает урон
-                    if (isHittingFromBelow && !cat.invincible) {
-                        cat.takeDamage();
-                    } 
-                    // В любом другом случае (сверху или сбоку) - враг получает урон
-                    else if (!isHittingFromBelow) {
-                        // Уменьшить здоровье врага
+                    // Определяем направление столкновения
+                    const collisionFromTop = (cat.y + cat.height) - enemy.y < 15 && cat.velocityY > 0;
+                    const collisionFromBottom = enemy.y + enemy.height - cat.y < 15 && cat.velocityY < 0;
+                    const collisionFromSide = !collisionFromTop && !collisionFromBottom;
+
+                    // Если кот прыгает на врага сверху - враг получает урон
+                    if (collisionFromTop) {
                         enemy.health--;
+                        cat.velocityY = -cat.jumpForce/2; // Отскок
                         
-                        // Отскок
-                        if (cat.velocityY > 0) {
-                            cat.velocityY = -cat.jumpForce/2;
-                        }
-                        
-                        // Если здоровье врага закончилось - убить его и дать 5 монет
                         if (enemy.health <= 0) {
                             enemies = enemies.filter(e => e !== enemy);
                             coins += 5;
                             updateHUD();
                         }
+                    } 
+                    // Если касание снизу или сбоку - кот получает урон
+                    else if ((collisionFromBottom || collisionFromSide) && !cat.invincible) {
+                        cat.takeDamage();
                     }
                 }
             }
             
-            // Проверка сбора монеток (остаётся без изменений)
+            // Проверка сбора монеток
             for (let coin of coinsItems) {
                 if (!coin.collected && 
                     cat.x + cat.width > coin.x && 
@@ -449,7 +444,6 @@
                     coins += 1;
                     updateHUD();
                     
-                    // За каждые 10 монет +1 HP
                     if (coins % 10 === 0) {
                         hp++;
                         updateHUD();
