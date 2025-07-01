@@ -102,7 +102,10 @@
         const distanceDisplay = document.getElementById('distance');
         const finalScoreDisplay = document.getElementById('final-score');
         const finalDistanceDisplay = document.getElementById('final-distance');
-        
+        const ENEMY_TYPES = {
+    GROUND: { color: '#c00', health: 2 },
+    FLYING: { color: '#8a2be2', health: 3 }
+};
         // Игровые параметры
         let gameRunning = false;
         let hp = 5;
@@ -268,7 +271,27 @@
         let platforms = [];
         
         // Монстры
-        let enemies = [];
+        let enemies = [
+    { 
+        x: 300, y: 320, width: 40, height: 40,
+        speed: 1.5, direction: 1,
+        type: 'GROUND',
+        eyes: { left: { x: 8, y: 12 }, right: { x: 28, y: 12 } }
+    },
+    { 
+        x: 500, y: 200, width: 40, height: 40,
+        speed: 2, direction: -1,
+        type: 'FLYING',
+        wingPhase: 0,
+        eyes: { left: { x: 8, y: 10 }, right: { x: 28, y: 10 } }
+    }
+];
+        let clouds = [
+    { x: 100, y: 50, width: 80, height: 40 },
+    { x: 400, y: 80, width: 120, height: 50 },
+    { x: 700, y: 60, width: 100, height: 45 }
+];
+
         
         // Монетки
         let coinsItems = [];
@@ -386,7 +409,23 @@
             coinsDisplay.textContent = coins;
             distanceDisplay.textContent = distance;
         }
-        
+        function getPreciseCollision(a, b) {
+    const overlap = {
+        top: a.y + a.height - b.y,
+        bottom: b.y + b.height - a.y,
+        left: a.x + a.width - b.x,
+        right: b.x + b.width - a.x
+    };
+    
+    const minOverlap = Math.min(...Object.values(overlap));
+    
+    return {
+        fromTop: overlap.top === minOverlap && a.velocityY > 0,
+        fromBottom: overlap.bottom === minOverlap,
+        fromSide: !(overlap.top === minOverlap || overlap.bottom === minOverlap),
+        overlap: minOverlap
+    };
+}
         function checkCollisions() {
     // Проверка платформ (без изменений)
     for (let platform of platforms) {
@@ -406,46 +445,27 @@
     for (let enemy of enemies) {
         if (!isColliding(cat, enemy)) continue;
         
-        // Определяем зону контакта
-        const contactZone = {
-            top: (cat.y + cat.height) - enemy.y,
-            bottom: (enemy.y + enemy.height) - cat.y,
-            left: (cat.x + cat.width) - enemy.x,
-            right: (enemy.x + enemy.width) - cat.x
-        };
+        // Точное определение зоны контакта
+        const collision = getPreciseCollision(cat, enemy);
         
-        // Определяем минимальную зону контакта
-        const minZone = Math.min(
-            contactZone.top, 
-            contactZone.bottom, 
-            contactZone.left, 
-            contactZone.right
-        );
-        
-        // Тип столкновения на основе минимальной зоны
-        let collisionType;
-        if (minZone === contactZone.top && cat.velocityY > 0) {
-            collisionType = 'TOP';
-        } else if (minZone === contactZone.bottom) {
-            collisionType = 'BOTTOM';
-        } else {
-            collisionType = 'SIDE';
-        }
-        
-        // Обработка столкновений
-        if (collisionType === 'TOP') {
-            // Атака сверху - всегда безопасна для кота
+        // Абсолютно надежная защита при атаке сверху
+        if (collision.fromTop && cat.velocityY > 0) {
+            // Атака успешна - урон врагу
             enemy.health--;
-            cat.velocityY = -cat.jumpForce * 0.7; // Сильный отскок
+            cat.velocityY = -cat.jumpForce * 0.6; // Отскок
             
             if (enemy.health <= 0) {
                 enemies = enemies.filter(e => e !== enemy);
                 coins += 5;
                 updateHUD();
             }
-        } 
-        else if (!cat.invincible) {
-            // Любое другое столкновение - урон коту
+            continue; // Пропускаем проверку урона
+        }
+        
+        // Урон коту ТОЛЬКО если:
+        // - Не в режиме неуязвимости
+        // - Касание снизу или сбоку
+        if (!cat.invincible && (collision.fromBottom || collision.fromSide)) {
             cat.takeDamage();
         }
     }
@@ -596,66 +616,102 @@ function checkCoinCollisions() {
         }
         
         function drawEnemies() {
-    for (let enemy of enemies) {
-        // Тело врага
-        ctx.fillStyle = enemy.type === 'flying' ? '#8a2be2' : '#c00';
+    enemies.forEach(enemy => {
+        // Тело
+        ctx.fillStyle = ENEMY_TYPES[enemy.type].color;
         ctx.fillRect(enemy.x - cameraOffset, enemy.y, enemy.width, enemy.height);
         
-        // Анимация крыльев для летающих
-        if (enemy.type === 'flying') {
-            enemy.wingPhase += 0.1;
-            const wingY = enemy.y + enemy.height/2;
-            const wingSize = 15 + Math.sin(enemy.wingPhase) * 5;
-            
-            // Левое крыло
-            ctx.fillStyle = 'rgba(200, 200, 255, 0.7)';
-            ctx.beginPath();
-            ctx.moveTo(enemy.x - cameraOffset - 10, wingY);
-            ctx.quadraticCurveTo(
-                enemy.x - cameraOffset - 20 - wingSize, 
-                wingY - 10, 
-                enemy.x - cameraOffset - 10 - wingSize/2, 
-                wingY - 20
-            );
-            ctx.quadraticCurveTo(
-                enemy.x - cameraOffset, 
-                wingY - 5, 
-                enemy.x - cameraOffset - 10, 
-                wingY
-            );
-            ctx.fill();
-            
-            // Правое крыло (аналогично)
-            ctx.beginPath();
-            ctx.moveTo(enemy.x - cameraOffset + enemy.width + 10, wingY);
-            ctx.quadraticCurveTo(
-                enemy.x - cameraOffset + enemy.width + 20 + wingSize, 
-                wingY - 10, 
-                enemy.x - cameraOffset + enemy.width + 10 + wingSize/2, 
-                wingY - 20
-            );
-            ctx.quadraticCurveTo(
-                enemy.x - cameraOffset + enemy.width, 
-                wingY - 5, 
-                enemy.x - cameraOffset + enemy.width + 10, 
-                wingY
-            );
-            ctx.fill();
+        // Крылья для летающих
+        if (enemy.type === 'FLYING') {
+            drawWings(enemy);
+            enemy.wingPhase += 0.15;
         }
         
-        // Глаза и другие детали (без изменений)
-        ctx.fillStyle = 'white';
-        ctx.fillRect(enemy.x - cameraOffset + 5, enemy.y + 10, 10, 10);
-        ctx.fillRect(enemy.x - cameraOffset + enemy.width - 15, enemy.y + 10, 10, 10);
+        // Глаза с зрачками
+        drawEyes(enemy);
         
-        // Индикатор здоровья (без изменений)
-        if (enemy.health > 1) {
-            ctx.fillStyle = 'red';
-            ctx.fillRect(enemy.x - cameraOffset, enemy.y - 10, enemy.width, 5);
-            ctx.fillStyle = 'lime';
-            ctx.fillRect(enemy.x - cameraOffset, enemy.y - 10, enemy.width * (enemy.health/3), 5);
-        }
-    }
+        // Индикатор здоровья
+        drawHealthBar(enemy);
+    });
+}
+
+function drawWings(enemy) {
+    const wingY = enemy.y + 15;
+    const flap = Math.sin(enemy.wingPhase) * 10;
+    
+    ctx.fillStyle = 'rgba(180, 160, 255, 0.8)';
+    // Левое крыло
+    ctx.beginPath();
+    ctx.ellipse(
+        enemy.x - cameraOffset - 15, 
+        wingY, 
+        20 + flap, 
+        8, 
+        0, 0, Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Правое крыло
+    ctx.beginPath();
+    ctx.ellipse(
+        enemy.x - cameraOffset + enemy.width + 15, 
+        wingY, 
+        20 + flap, 
+        8, 
+        0, 0, Math.PI * 2
+    );
+    ctx.fill();
+}
+
+function drawEyes(enemy) {
+    // Белки глаз
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(
+        enemy.x - cameraOffset + enemy.eyes.left.x,
+        enemy.y + enemy.eyes.left.y,
+        6, 0, Math.PI * 2
+    );
+    ctx.arc(
+        enemy.x - cameraOffset + enemy.eyes.right.x,
+        enemy.y + enemy.eyes.right.y,
+        6, 0, Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Зрачки (следуют за котом)
+    const lookX = cat.x - (enemy.x - cameraOffset);
+    const lookY = cat.y - enemy.y;
+    const angle = Math.atan2(lookY, lookX);
+    
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(
+        enemy.x - cameraOffset + enemy.eyes.left.x + Math.cos(angle) * 2,
+        enemy.y + enemy.eyes.left.y + Math.sin(angle) * 2,
+        3, 0, Math.PI * 2
+    );
+    ctx.arc(
+        enemy.x - cameraOffset + enemy.eyes.right.x + Math.cos(angle) * 2,
+        enemy.y + enemy.eyes.right.y + Math.sin(angle) * 2,
+        3, 0, Math.PI * 2
+    );
+    ctx.fill();
+}
+function drawClouds() {
+    clouds.forEach(cloud => {
+        const cloudX = (cloud.x - cameraOffset * 0.3) % (canvas.width + 200);
+        
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        // Основание облака
+        ctx.beginPath();
+        ctx.arc(cloudX + 20, cloud.y + 20, 15, 0, Math.PI * 2);
+        ctx.arc(cloudX + 40, cloud.y + 15, 20, 0, Math.PI * 2);
+        ctx.arc(cloudX + 70, cloud.y + 20, 18, 0, Math.PI * 2);
+        ctx.arc(cloudX + 50, cloud.y + 30, 15, 0, Math.PI * 2);
+        ctx.arc(cloudX + 25, cloud.y + 30, 12, 0, Math.PI * 2);
+        ctx.fill();
+    });
 }
 
         
