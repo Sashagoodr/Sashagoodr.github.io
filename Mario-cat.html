@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кот-Рогалик</title>
+    <title>Кот-Платформер</title>
     <style>
         body {
             margin: 0;
@@ -74,9 +74,9 @@
         </div>
         
         <div id="start-screen">
-            <h1>Кот-Рогалик</h1>
+            <h1>Кот-Платформер</h1>
             <p>Управление: стрелки для движения, пробел для прыжка</p>
-            <p>Убейте монстров, прыгая на них! Собирайте монеты для здоровья.</p>
+            <p>Прыгайте на врагов сверху, избегайте касаний сбоку и снизу!</p>
             <button id="start-button">Начать игру</button>
         </div>
         
@@ -101,6 +101,12 @@
         const distanceDisplay = document.getElementById('distance');
         const finalScoreDisplay = document.getElementById('final-score');
         const finalDistanceDisplay = document.getElementById('final-distance');
+        
+        // Настройки игры
+        const ENEMY_TYPES = {
+            GROUND: { color: '#c00', health: 2 },
+            FLYING: { color: '#8a2be2', health: 3 }
+        };
         
         // Игровые параметры
         let gameRunning = false;
@@ -132,55 +138,99 @@
                     ctx.globalAlpha = 0.5;
                 }
                 
+                // Тело кота
                 ctx.fillStyle = 'orange';
                 ctx.fillRect(this.x - cameraOffset, this.y, this.width, this.height);
                 
-                // Рисуем уши
-                ctx.fillStyle = 'orange';
+                // Голова
                 ctx.beginPath();
-                ctx.moveTo(this.x - cameraOffset + 10, this.y);
-                ctx.lineTo(this.x - cameraOffset, this.y - 15);
-                ctx.lineTo(this.x - cameraOffset + 20, this.y);
+                ctx.arc(
+                    this.x - cameraOffset + this.width/2, 
+                    this.y - 10, 
+                    20, 
+                    0, 
+                    Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Уши
+                ctx.beginPath();
+                ctx.moveTo(this.x - cameraOffset + this.width/2 - 15, this.y - 10);
+                ctx.lineTo(this.x - cameraOffset + this.width/2 - 25, this.y - 30);
+                ctx.lineTo(this.x - cameraOffset + this.width/2 - 5, this.y - 15);
                 ctx.fill();
                 
                 ctx.beginPath();
-                ctx.moveTo(this.x - cameraOffset + this.width - 10, this.y);
-                ctx.lineTo(this.x - cameraOffset + this.width, this.y - 15);
-                ctx.lineTo(this.x - cameraOffset + this.width - 20, this.y);
+                ctx.moveTo(this.x - cameraOffset + this.width/2 + 15, this.y - 10);
+                ctx.lineTo(this.x - cameraOffset + this.width/2 + 25, this.y - 30);
+                ctx.lineTo(this.x - cameraOffset + this.width/2 + 5, this.y - 15);
                 ctx.fill();
                 
-                // Рисуем глаза
+                // Глаза
+                const lookDirection = this.direction === 'right' ? 1 : -1;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - cameraOffset + this.width/2 - 8 + lookDirection * 3, 
+                    this.y - 15, 
+                    5, 
+                    0, 
+                    Math.PI * 2
+                );
+                ctx.arc(
+                    this.x - cameraOffset + this.width/2 + 8 + lookDirection * 3, 
+                    this.y - 15, 
+                    5, 
+                    0, 
+                    Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Зрачки
                 ctx.fillStyle = 'green';
-                ctx.fillRect(this.x - cameraOffset + 10, this.y + 15, 8, 8);
-                ctx.fillRect(this.x - cameraOffset + this.width - 18, this.y + 15, 8, 8);
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - cameraOffset + this.width/2 - 8 + lookDirection * 5, 
+                    this.y - 15, 
+                    2, 
+                    0, 
+                    Math.PI * 2
+                );
+                ctx.arc(
+                    this.x - cameraOffset + this.width/2 + 8 + lookDirection * 5, 
+                    this.y - 15, 
+                    2, 
+                    0, 
+                    Math.PI * 2
+                );
+                ctx.fill();
                 
-                // Рисуем нос
+                // Нос
                 ctx.fillStyle = 'pink';
                 ctx.beginPath();
-                ctx.moveTo(this.x - cameraOffset + this.width/2, this.y + 25);
-                ctx.lineTo(this.x - cameraOffset + this.width/2 - 5, this.y + 35);
-                ctx.lineTo(this.x - cameraOffset + this.width/2 + 5, this.y + 35);
+                ctx.arc(
+                    this.x - cameraOffset + this.width/2, 
+                    this.y - 8, 
+                    3, 
+                    0, 
+                    Math.PI * 2
+                );
                 ctx.fill();
                 
-                // Рисуем усы
+                // Усы
                 ctx.strokeStyle = 'black';
                 ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(this.x - cameraOffset + this.width/2, this.y + 30);
-                ctx.lineTo(this.x - cameraOffset + this.width/2 - 15, this.y + 25);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(this.x - cameraOffset + this.width/2, this.y + 30);
-                ctx.lineTo(this.x - cameraOffset + this.width/2 - 15, this.y + 35);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(this.x - cameraOffset + this.width/2, this.y + 30);
-                ctx.lineTo(this.x - cameraOffset + this.width/2 + 15, this.y + 25);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(this.x - cameraOffset + this.width/2, this.y + 30);
-                ctx.lineTo(this.x - cameraOffset + this.width/2 + 15, this.y + 35);
-                ctx.stroke();
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - cameraOffset + this.width/2, this.y - 8);
+                    ctx.lineTo(this.x - cameraOffset + this.width/2 - 20, this.y - 10 + i * 3);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - cameraOffset + this.width/2, this.y - 8);
+                    ctx.lineTo(this.x - cameraOffset + this.width/2 + 20, this.y - 10 + i * 3);
+                    ctx.stroke();
+                }
                 
                 ctx.globalAlpha = 1.0;
             },
@@ -216,6 +266,10 @@
                 if (this.x - cameraOffset < 50) {
                     this.x = cameraOffset + 50;
                 }
+                
+                // Направление взгляда
+                if (keys.left) this.direction = 'left';
+                if (keys.right) this.direction = 'right';
             },
             
             jump: function() {
@@ -230,7 +284,7 @@
                     hp--;
                     updateHUD();
                     this.invincible = true;
-                    this.invincibleTimer = 60; // 1 секунда невидимости (60 кадров)
+                    this.invincibleTimer = 60;
                     
                     // Отталкивание
                     this.velocityY = -8;
@@ -248,14 +302,15 @@
             height: 40,
             
             draw: function() {
-                ctx.fillStyle = '#3a5c0d';
-                ctx.fillRect(0, this.y, canvas.width, this.height);
-                
-                // Трава сверху
+                // Трава
                 ctx.fillStyle = '#5a9e0f';
                 ctx.fillRect(0, this.y, canvas.width, 5);
                 
-                // Детализация земли
+                // Земля
+                ctx.fillStyle = '#3a5c0d';
+                ctx.fillRect(0, this.y + 5, canvas.width, this.height - 5);
+                
+                // Детализация
                 ctx.fillStyle = '#2a4a0a';
                 for (let i = 0; i < canvas.width; i += 20) {
                     ctx.fillRect(i, this.y + 5 + Math.sin(i/30 + cameraOffset/30) * 3, 10, 3);
@@ -266,15 +321,25 @@
         // Платформы
         let platforms = [];
         
-        // Монстры
+        // Враги
         let enemies = [];
         
         // Монетки
         let coinsItems = [];
         
+        // Облака
+        let clouds = [];
+        
+        // Управление
+        const keys = {
+            left: false,
+            right: false,
+            up: false
+        };
+        
         // Генерация уровня
         function generateLevel() {
-            // Генерация начальных платформ
+            // Платформы
             platforms = [];
             for (let i = 0; i < 5; i++) {
                 const platform = {
@@ -287,28 +352,30 @@
                 lastPlatformX = platform.x + platform.width;
             }
             
-            // Генерация начальных врагов
+            // Враги
             enemies = [];
             for (let i = 0; i < 3; i++) {
+                const enemyType = Math.random() > 0.5 ? 'FLYING' : 'GROUND';
                 const enemy = {
                     x: i * 300 + 400,
-                    y: 320,
+                    y: enemyType === 'GROUND' ? 320 : 200 + Math.random() * 100,
                     width: 40,
                     height: 40,
                     speed: 1 + Math.random() * 2,
-                    direction: 1,
-                    health: 2,
-                    type: Math.random() > 0.7 ? 'flying' : 'ground'
+                    direction: Math.random() > 0.5 ? 1 : -1,
+                    health: ENEMY_TYPES[enemyType].health,
+                    type: enemyType,
+                    wingPhase: Math.random() * Math.PI * 2,
+                    eyes: {
+                        left: { x: 8, y: 12 },
+                        right: { x: 28, y: 12 }
+                    }
                 };
-                if (enemy.type === 'flying') {
-                    enemy.y = 200 + Math.random() * 100;
-                    enemy.speed *= 1.5;
-                }
                 enemies.push(enemy);
                 lastEnemyX = enemy.x + 200;
             }
             
-            // Генерация начальных монеток
+            // Монетки
             coinsItems = [];
             for (let i = 0; i < 10; i++) {
                 const coin = {
@@ -317,19 +384,23 @@
                     width: 20,
                     height: 20,
                     collected: false,
-                    bounce: 0
+                    bounce: Math.random() * Math.PI * 2
                 };
                 coinsItems.push(coin);
                 lastCoinX = coin.x + 100;
             }
+            
+            // Облака
+            clouds = [];
+            for (let i = 0; i < 5; i++) {
+                clouds.push({
+                    x: Math.random() * 1000,
+                    y: 30 + Math.random() * 100,
+                    width: 80 + Math.random() * 60,
+                    height: 30 + Math.random() * 30
+                });
+            }
         }
-        
-        // Управление
-        const keys = {
-            left: false,
-            right: false,
-            up: false
-        };
         
         // Обработчики событий
         document.addEventListener('keydown', function(e) {
@@ -386,6 +457,31 @@
             distanceDisplay.textContent = distance;
         }
         
+        function isColliding(a, b) {
+            return a.x < b.x + b.width &&
+                   a.x + a.width > b.x &&
+                   a.y < b.y + b.height &&
+                   a.y + a.height > b.y;
+        }
+        
+        function getCollisionType(a, b) {
+            const overlap = {
+                top: a.y + a.height - b.y,
+                bottom: b.y + b.height - a.y,
+                left: a.x + a.width - b.x,
+                right: b.x + b.width - a.x
+            };
+            
+            const minOverlap = Math.min(...Object.values(overlap));
+            
+            return {
+                fromTop: overlap.top === minOverlap && a.velocityY > 0,
+                fromBottom: overlap.bottom === minOverlap,
+                fromSide: !(overlap.top === minOverlap || overlap.bottom === minOverlap),
+                overlap: minOverlap
+            };
+        }
+        
         function checkCollisions() {
             // Проверка столкновений с платформами
             for (let platform of platforms) {
@@ -403,44 +499,36 @@
             
             // Проверка столкновений с врагами
             for (let enemy of enemies) {
-                if (cat.x + cat.width > enemy.x && 
-                    cat.x < enemy.x + enemy.width &&
-                    cat.y + cat.height > enemy.y && 
-                    cat.y < enemy.y + enemy.height) {
+                if (!isColliding(cat, enemy)) continue;
+                
+                const collision = getCollisionType(cat, enemy);
+                
+                // Атака сверху - враг получает урон
+                if (collision.fromTop) {
+                    enemy.health--;
+                    cat.velocityY = -cat.jumpForce * 0.6;
                     
-                    // Если кот прыгает на врага сверху
-                    if (cat.velocityY > 0 && cat.y + cat.height < enemy.y + enemy.height/2) {
-                        // Уменьшить здоровье врага
-                        enemy.health--;
-                        
-                        // Отскок
-                        cat.velocityY = -cat.jumpForce/2;
-                        
-                        // Если здоровье врага закончилось - убить его
-                        if (enemy.health <= 0) {
-                            enemies = enemies.filter(e => e !== enemy);
-                            score += 20;
-                        }
-                    } else if (!cat.invincible) {
-                        // Получить урон
-                        cat.takeDamage();
+                    if (enemy.health <= 0) {
+                        enemies = enemies.filter(e => e !== enemy);
+                        coins += 5;
+                        updateHUD();
                     }
+                    continue;
+                }
+                
+                // Урон коту при касании снизу или сбоку
+                if (!cat.invincible && (collision.fromBottom || collision.fromSide)) {
+                    cat.takeDamage();
                 }
             }
             
             // Проверка сбора монеток
             for (let coin of coinsItems) {
-                if (!coin.collected && 
-                    cat.x + cat.width > coin.x && 
-                    cat.x < coin.x + coin.width &&
-                    cat.y + cat.height > coin.y && 
-                    cat.y < coin.y + coin.height) {
-                    
+                if (!coin.collected && isColliding(cat, coin)) {
                     coin.collected = true;
-                    coins++;
-                    score += 10;
+                    coins += 1;
+                    updateHUD();
                     
-                    // За каждые 10 монет +1 HP
                     if (coins % 10 === 0) {
                         hp++;
                         updateHUD();
@@ -451,37 +539,17 @@
         
         function updateEnemies() {
             for (let enemy of enemies) {
-                // Движение врагов
                 enemy.x += enemy.speed * enemy.direction;
                 
-                // Изменение направления при достижении границ платформы
-                let onPlatform = false;
-                for (let platform of platforms) {
-                    if (enemy.x + enemy.width > platform.x && 
-                        enemy.x < platform.x + platform.width &&
-                        enemy.y + enemy.height >= platform.y - 1 && 
-                        enemy.y + enemy.height <= platform.y + platform.height) {
-                        
-                        onPlatform = true;
-                        enemy.y = platform.y - enemy.height;
-                        
-                        if (enemy.type === 'ground') {
-                            if (enemy.x <= platform.x || enemy.x + enemy.width >= platform.x + platform.width) {
-                                enemy.direction *= -1;
-                            }
-                        }
-                        break;
-                    }
+                // Изменение направления
+                if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.width + cameraOffset) {
+                    enemy.direction *= -1;
                 }
                 
-                // Падение если не на платформе
-                if (!onPlatform && enemy.y + enemy.height < ground.y && enemy.type === 'ground') {
-                    enemy.y += 5;
-                }
-                
-                // Летающие враги двигаются по синусоиде
-                if (enemy.type === 'flying') {
-                    enemy.y += Math.sin(enemy.x / 50 + Date.now() / 500) * 0.5;
+                // Анимация крыльев
+                if (enemy.type === 'FLYING') {
+                    enemy.wingPhase += 0.1;
+                    enemy.y += Math.sin(enemy.wingPhase) * 0.5;
                 }
             }
         }
@@ -498,22 +566,24 @@
                 platforms.push(platform);
                 lastPlatformX = platform.x + platform.width;
                 
-                // 30% шанс добавить врага на платформу
+                // 30% шанс добавить врага
                 if (Math.random() < 0.3) {
+                    const enemyType = Math.random() > 0.5 ? 'FLYING' : 'GROUND';
                     const enemy = {
                         x: platform.x + platform.width/2 - 20,
-                        y: platform.y - 40,
+                        y: enemyType === 'GROUND' ? platform.y - 40 : 150 + Math.random() * 100,
                         width: 40,
                         height: 40,
                         speed: 1 + Math.random() * 2,
                         direction: Math.random() > 0.5 ? 1 : -1,
-                        health: Math.random() > 0.7 ? 3 : 2,
-                        type: Math.random() > 0.8 ? 'flying' : 'ground'
+                        health: ENEMY_TYPES[enemyType].health,
+                        type: enemyType,
+                        wingPhase: Math.random() * Math.PI * 2,
+                        eyes: {
+                            left: { x: 8, y: 12 },
+                            right: { x: 28, y: 12 }
+                        }
                     };
-                    if (enemy.type === 'flying') {
-                        enemy.y = 150 + Math.random() * 100;
-                        enemy.speed *= 1.5;
-                    }
                     enemies.push(enemy);
                     lastEnemyX = enemy.x + 200;
                 }
@@ -527,7 +597,7 @@
                     width: 20,
                     height: 20,
                     collected: false,
-                    bounce: 0
+                    bounce: Math.random() * Math.PI * 2
                 };
                 coinsItems.push(coin);
                 lastCoinX = coin.x + 50;
@@ -541,30 +611,91 @@
         
         function drawEnemies() {
             for (let enemy of enemies) {
-                // Тело врага
-                ctx.fillStyle = enemy.type === 'flying' ? '#8a2be2' : '#c00';
+                // Тело
+                ctx.fillStyle = ENEMY_TYPES[enemy.type].color;
                 ctx.fillRect(enemy.x - cameraOffset, enemy.y, enemy.width, enemy.height);
                 
-                // Глаза врага
-                ctx.fillStyle = 'white';
-                ctx.fillRect(enemy.x - cameraOffset + 5, enemy.y + 10, 10, 10);
-                ctx.fillRect(enemy.x - cameraOffset + enemy.width - 15, enemy.y + 10, 10, 10);
-                ctx.fillStyle = 'black';
-                ctx.fillRect(enemy.x - cameraOffset + 8, enemy.y + 13, 4, 4);
-                ctx.fillRect(enemy.x - cameraOffset + enemy.width - 12, enemy.y + 13, 4, 4);
+                // Крылья для летающих
+                if (enemy.type === 'FLYING') {
+                    drawWings(enemy);
+                }
                 
-                // Рот
-                ctx.fillStyle = 'black';
-                ctx.fillRect(enemy.x - cameraOffset + 10, enemy.y + 25, enemy.width - 20, 5);
+                // Глаза
+                drawEyes(enemy);
                 
-                // Полоска здоровья для врагов с HP > 1
-                if (enemy.health > 1) {
+                // Индикатор здоровья
+                if (enemy.health < ENEMY_TYPES[enemy.type].health) {
                     ctx.fillStyle = 'red';
                     ctx.fillRect(enemy.x - cameraOffset, enemy.y - 10, enemy.width, 5);
                     ctx.fillStyle = 'lime';
-                    ctx.fillRect(enemy.x - cameraOffset, enemy.y - 10, enemy.width * (enemy.health/3), 5);
+                    ctx.fillRect(enemy.x - cameraOffset, enemy.y - 10, 
+                               enemy.width * (enemy.health / ENEMY_TYPES[enemy.type].health), 5);
                 }
             }
+        }
+        
+        function drawWings(enemy) {
+            const wingY = enemy.y + 15;
+            const flap = Math.sin(enemy.wingPhase) * 10;
+            
+            ctx.fillStyle = 'rgba(180, 160, 255, 0.8)';
+            // Левое крыло
+            ctx.beginPath();
+            ctx.ellipse(
+                enemy.x - cameraOffset - 15, 
+                wingY, 
+                20 + flap, 
+                8, 
+                0, 0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Правое крыло
+            ctx.beginPath();
+            ctx.ellipse(
+                enemy.x - cameraOffset + enemy.width + 15, 
+                wingY, 
+                20 + flap, 
+                8, 
+                0, 0, Math.PI * 2
+            );
+            ctx.fill();
+        }
+        
+        function drawEyes(enemy) {
+            // Белки глаз
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(
+                enemy.x - cameraOffset + enemy.eyes.left.x,
+                enemy.y + enemy.eyes.left.y,
+                6, 0, Math.PI * 2
+            );
+            ctx.arc(
+                enemy.x - cameraOffset + enemy.eyes.right.x,
+                enemy.y + enemy.eyes.right.y,
+                6, 0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Зрачки (следуют за котом)
+            const lookX = cat.x - (enemy.x - cameraOffset);
+            const lookY = cat.y - enemy.y;
+            const angle = Math.atan2(lookY, lookX);
+            
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(
+                enemy.x - cameraOffset + enemy.eyes.left.x + Math.cos(angle) * 2,
+                enemy.y + enemy.eyes.left.y + Math.sin(angle) * 2,
+                3, 0, Math.PI * 2
+            );
+            ctx.arc(
+                enemy.x - cameraOffset + enemy.eyes.right.x + Math.cos(angle) * 2,
+                enemy.y + enemy.eyes.right.y + Math.sin(angle) * 2,
+                3, 0, Math.PI * 2
+            );
+            ctx.fill();
         }
         
         function drawCoins() {
@@ -604,26 +735,24 @@
             }
         }
         
-        function drawPlatforms() {
-            for (let platform of platforms) {
-                // Основание платформы
-                ctx.fillStyle = '#8B4513';
-                ctx.fillRect(platform.x - cameraOffset, platform.y, platform.width, platform.height);
+        function drawClouds() {
+            for (let cloud of clouds) {
+                const cloudX = (cloud.x - cameraOffset * 0.3) % (canvas.width + 200);
                 
-                // Верх платформы
-                ctx.fillStyle = '#5a9e0f';
-                ctx.fillRect(platform.x - cameraOffset, platform.y, platform.width, 3);
-                
-                // Детализация
-                ctx.fillStyle = '#6b3a0a';
-                for (let i = 0; i < platform.width; i += 10) {
-                    ctx.fillRect(platform.x - cameraOffset + i, platform.y + 3, 5, platform.height - 3);
-                }
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                // Основание облака
+                ctx.beginPath();
+                ctx.arc(cloudX + 20, cloud.y + 20, 15, 0, Math.PI * 2);
+                ctx.arc(cloudX + 40, cloud.y + 15, 20, 0, Math.PI * 2);
+                ctx.arc(cloudX + 70, cloud.y + 20, 18, 0, Math.PI * 2);
+                ctx.arc(cloudX + 50, cloud.y + 30, 15, 0, Math.PI * 2);
+                ctx.arc(cloudX + 25, cloud.y + 30, 12, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
         
         function drawBackground() {
-            // Небо
+            // Градиентное небо
             const skyGradient = ctx.createLinearGradient(0, 0, 0, ground.y);
             skyGradient.addColorStop(0, '#87CEEB');
             skyGradient.addColorStop(1, '#E0F7FA');
@@ -631,18 +760,7 @@
             ctx.fillRect(0, 0, canvas.width, ground.y);
             
             // Облака
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            for (let i = 0; i < 5; i++) {
-                const cloudX = (i * 300 - cameraOffset * 0.2) % (canvas.width + 300);
-                const cloudY = 50 + (i * 50) % 100;
-                
-                ctx.beginPath();
-                ctx.arc(cloudX, cloudY, 20, 0, Math.PI * 2);
-                ctx.arc(cloudX + 25, cloudY - 10, 25, 0, Math.PI * 2);
-                ctx.arc(cloudX + 50, cloudY, 20, 0, Math.PI * 2);
-                ctx.arc(cloudX + 25, cloudY + 10, 25, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            drawClouds();
         }
         
         function gameLoop() {
@@ -655,28 +773,27 @@
             drawBackground();
             
             // Управление котом
-            if (keys.left) {
-                cat.x -= cat.speed;
-                cat.direction = 'left';
-            }
-            if (keys.right) {
-                cat.x += cat.speed;
-                cat.direction = 'right';
-            }
-            if (keys.up) {
-                cat.jump();
-            }
+            if (keys.left) cat.x -= cat.speed;
+            if (keys.right) cat.x += cat.speed;
+            if (keys.up) cat.jump();
             
             // Генерация новых элементов
             generateNewElements();
             
-            // Обновление и отрисовка
+            // Обновление
             cat.update();
             updateEnemies();
             checkCollisions();
             
+            // Отрисовка
             ground.draw();
-            drawPlatforms();
+            
+            // Платформы
+            ctx.fillStyle = '#8B4513';
+            for (let platform of platforms) {
+                ctx.fillRect(platform.x - cameraOffset, platform.y, platform.width, platform.height);
+            }
+            
             drawCoins();
             drawEnemies();
             cat.draw();
