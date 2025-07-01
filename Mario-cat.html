@@ -498,29 +498,34 @@
             }
             
             // Проверка столкновений с врагами
-            for (let enemy of enemies) {
-                if (!isColliding(cat, enemy)) continue;
-                
-                const collision = getCollisionType(cat, enemy);
-                
-                // Атака сверху - враг получает урон
-                if (collision.fromTop) {
-                    enemy.health--;
-                    cat.velocityY = -cat.jumpForce * 0.6;
-                    
-                    if (enemy.health <= 0) {
-                        enemies = enemies.filter(e => e !== enemy);
-                        coins += 5;
-                        updateHUD();
-                    }
-                    continue;
-                }
-                
-                // Урон коту при касании снизу или сбоку
-                if (!cat.invincible && (collision.fromBottom || collision.fromSide)) {
-                    cat.takeDamage();
-                }
+            function checkCollisions() {
+    // Проверка врагов (главное - простота и надежность)
+    for (let enemy of enemies) {
+        if (!isColliding(cat, enemy)) continue;
+
+        // Критерий атаки сверху (единственный важный параметр!)
+        const isSafeAttack = (
+            cat.velocityY > 0 &&                      // Кот движется вниз
+            (cat.y + cat.height) - enemy.y < 30 &&    // Касание верхней части врага
+            cat.y + cat.height * 0.7 > enemy.y        
+        );
+
+        if (isSafeAttack) {
+            // 100% защищенная атака
+            enemy.health--;
+            cat.velocityY = -cat.jumpForce * 0.6; // Отскок
+            
+            if (enemy.health <= 0) {
+                enemies = enemies.filter(e => e !== enemy);
+                coins += 5;
             }
+        } 
+        else if (!cat.invincible) {
+            // Любое другое касание - урон коту
+            cat.takeDamage();
+        }
+    }
+}
             
             // Проверка сбора монеток
             for (let coin of coinsItems) {
