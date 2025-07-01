@@ -99,11 +99,11 @@
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
         
-        /* СТИЛИ ТОРТА БЕЗ ВИШЕНКИ */
+        /* СТИЛИ ТОРТА СО СВЕЧОЙ */
         .cake-container {
             margin: 30px 0;
             position: relative;
-            height: 220px;
+            height: 180px;
             display: flex;
             justify-content: center;
             align-items: flex-end;
@@ -111,39 +111,30 @@
         
         .plate {
             position: absolute;
-            width: 280px;
-            height: 40px;
+            width: 250px;
+            height: 30px;
             background: #f5f5f5;
             border-radius: 50%;
-            bottom: -15px;
+            bottom: -10px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
             z-index: 1;
         }
         
         .cake {
             position: relative;
-            width: 220px;
-            height: 110px;
+            width: 200px;
+            height: 100px;
             background: linear-gradient(to right, #e0a170, #e8b28a, #e0a170);
             border-radius: 10px 10px 0 0;
             z-index: 2;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         
-        .cake-bottom {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 70px;
-            background: linear-gradient(to right, #d08a5a, #e0a170, #d08a5a);
-            border-radius: 10px 10px 0 0;
-        }
-        
         .cake-top {
             position: absolute;
             top: 0;
             width: 100%;
-            height: 40px;
+            height: 30px;
             background: linear-gradient(to right, #f8c8dc, #fce4ec, #f8c8dc);
             border-radius: 15px 15px 0 0;
         }
@@ -153,18 +144,18 @@
             top: -5px;
             left: 10px;
             right: 10px;
-            height: 15px;
+            height: 10px;
             background: #e91e63;
             border-radius: 5px 5px 0 0;
         }
         
         .candle {
             position: absolute;
-            bottom: 180px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            width: 12px;
-            height: 70px;
+            width: 10px;
+            height: 60px;
             background: linear-gradient(to right, #ff9a9e, #fad0c4, #ff9a9e);
             border-radius: 5px;
             z-index: 3;
@@ -173,14 +164,14 @@
         
         .flame {
             position: absolute;
-            bottom: 250px;
+            bottom: 160px;
             left: 50%;
             transform: translateX(-50%);
-            width: 15px;
-            height: 30px;
+            width: 12px;
+            height: 25px;
             background: #ffef00;
             border-radius: 50% 50% 20% 20%;
-            box-shadow: 0 0 15px #ff9900, 0 0 30px #ff6600;
+            box-shadow: 0 0 10px #ff9900, 0 0 20px #ff6600;
             animation: flicker 0.8s infinite alternate;
             z-index: 4;
         }
@@ -358,13 +349,12 @@
             <div class="cake-container">
                 <div class="plate"></div>
                 <div class="cake">
-                    <div class="cake-bottom"></div>
                     <div class="cake-top"></div>
                     <div class="cream"></div>
                     <div class="sprinkles" id="sprinkles"></div>
+                    <div class="candle"></div>
+                    <div class="flame"></div>
                 </div>
-                <div class="candle"></div>
-                <div class="flame"></div>
             </div>
             
             <button onclick="blowCandle()">Задуть свечу!</button>
@@ -522,7 +512,7 @@
             const smoke = document.createElement('div');
             smoke.style.position = 'absolute';
             smoke.style.left = '50%';
-            smoke.style.bottom = '250px';
+            smoke.style.bottom = '160px';
             smoke.style.width = '5px';
             smoke.style.height = '5px';
             smoke.style.backgroundColor = 'rgba(200, 200, 200, 0.7)';
