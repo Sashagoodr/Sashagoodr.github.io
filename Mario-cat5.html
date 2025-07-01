@@ -409,13 +409,12 @@
                     cat.y + cat.height > enemy.y && 
                     cat.y < enemy.y + enemy.height) {
                     
-                    // Определяем направление столкновения
-                    const collisionFromTop = (cat.y + cat.height) - enemy.y < 15 && cat.velocityY > 0;
-                    const collisionFromBottom = enemy.y + enemy.height - cat.y < 15 && cat.velocityY < 0;
-                    const collisionFromSide = !collisionFromTop && !collisionFromBottom;
-
-                    // Если кот прыгает на врага сверху - враг получает урон
-                    if (collisionFromTop) {
+                    // Определяем, атакует ли кот сверху (прыгает на врага)
+                    const isAttackingFromAbove = cat.velocityY > 0 && 
+                                              (cat.y + cat.height) - enemy.y < 20;
+                    
+                    // Если это атака сверху - враг получает урон
+                    if (isAttackingFromAbove) {
                         enemy.health--;
                         cat.velocityY = -cat.jumpForce/2; // Отскок
                         
@@ -425,9 +424,15 @@
                             updateHUD();
                         }
                     } 
-                    // Если касание снизу или сбоку - кот получает урон
-                    else if ((collisionFromBottom || collisionFromSide) && !cat.invincible) {
-                        cat.takeDamage();
+                    // Если кот не атакует сверху и касается врага - проверяем урон
+                    else if (!cat.invincible) {
+                        // Определяем, касается ли кот врага снизу
+                        const isHitFromBelow = enemy.y + enemy.height - cat.y < 15;
+                        
+                        // Получает урон только при касании снизу или сбоку
+                        if (isHitFromBelow || !isAttackingFromAbove) {
+                            cat.takeDamage();
+                        }
                     }
                 }
             }
