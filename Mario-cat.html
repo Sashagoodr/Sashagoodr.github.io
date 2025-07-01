@@ -640,32 +640,26 @@
         }
         
         function drawWings(enemy) {
-            const wingY = enemy.y + 15;
-            const flap = Math.sin(enemy.wingPhase) * 10;
-            
-            ctx.fillStyle = 'rgba(180, 160, 255, 0.8)';
-            // Левое крыло
-            ctx.beginPath();
-            ctx.ellipse(
-                enemy.x - cameraOffset - 15, 
-                wingY, 
-                20 + flap, 
-                8, 
-                0, 0, Math.PI * 2
-            );
-            ctx.fill();
-            
-            // Правое крыло
-            ctx.beginPath();
-            ctx.ellipse(
-                enemy.x - cameraOffset + enemy.width + 15, 
-                wingY, 
-                20 + flap, 
-                8, 
-                0, 0, Math.PI * 2
-            );
-            ctx.fill();
-        }
+    const wingY = enemy.y + 15;
+    const flap = Math.sin(Date.now() * 0.01) * 12; // Плавная анимация
+    
+    ctx.fillStyle = '#B4A0FF';
+    // Левое крыло
+    ctx.beginPath();
+    ctx.ellipse(
+        enemy.x - cameraOffset - 15, wingY, 
+        25 + flap, 10, 0, 0, Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Правое крыло
+    ctx.beginPath();
+    ctx.ellipse(
+        enemy.x - cameraOffset + enemy.width + 15, wingY, 
+        25 + flap, 10, 0, 0, Math.PI * 2
+    );
+    ctx.fill();
+}
         
         function drawEyes(enemy) {
             // Белки глаз
