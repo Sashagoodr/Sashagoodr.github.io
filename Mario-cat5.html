@@ -388,80 +388,97 @@
         }
         
         function checkCollisions() {
-            // Проверка столкновений с платформами
-            for (let platform of platforms) {
-                if (cat.y + cat.height > platform.y && 
-                    cat.y < platform.y + platform.height &&
-                    cat.x + cat.width > platform.x && 
-                    cat.x < platform.x + platform.width &&
-                    cat.velocityY > 0) {
-                    
-                    cat.y = platform.y - cat.height;
-                    cat.velocityY = 0;
-                    cat.isJumping = false;
-                }
-            }
+    // Проверка столкновений с платформами (остаётся без изменений)
+    for (let platform of platforms) {
+        if (cat.y + cat.height > platform.y && 
+            cat.y < platform.y + platform.height &&
+            cat.x + cat.width > platform.x && 
+            cat.x < platform.x + platform.width &&
+            cat.velocityY > 0) {
             
-            // Проверка столкновений с врагами
-            for (let enemy of enemies) {
-                if (cat.x + cat.width > enemy.x && 
-                    cat.x < enemy.x + enemy.width &&
-                    cat.y + cat.height > enemy.y && 
-                    cat.y < enemy.y + enemy.height) {
-                    
-                    // Определяем, атакует ли кот сверху (прыгает на врага)
-                    const isAttackingFromAbove = cat.velocityY > 0;
-                    const attackZone = 25; // Зона атаки сверху (пиксели)
-                    const isInAttackPosition = (cat.y + cat.height) - enemy.y < attackZone;
-                    
-                    // Если это атака сверху - враг получает урон, кот защищён
-                    if (isAttackingFromAbove && isInAttackPosition) {
-                        enemy.health--;
-                        cat.velocityY = -cat.jumpForce/2; // Отскок
-                        
-                        if (enemy.health <= 0) {
-                            enemies = enemies.filter(e => e !== enemy);
-                            coins += 5;
-                            updateHUD();
-                        }
-                        continue; // Пропускаем проверку урона для кота
-                    } 
-                    
-                    // Если не атака сверху - проверяем урон для кота
-                    if (!cat.invincible) {
-                        // Касание снизу (враг над котом)
-                        const isHitFromBelow = enemy.y + enemy.height - cat.y < 15;
-                        
-                        // Касание сбоку (определяем по скорости и положению)
-                        const isHitFromSide = Math.abs((cat.x + cat.width/2) - (enemy.x + enemy.width/2)) > 
-                                             Math.abs((cat.y + cat.height/2) - (enemy.y + enemy.height/2));
-                        
-                        if (isHitFromBelow || isHitFromSide) {
-                            cat.takeDamage();
-                        }
-                    }
+            cat.y = platform.y - cat.height;
+            cat.velocityY = 0;
+            cat.isJumping = false;
+        }
+    }
+    
+    // Проверка столкновений с врагами
+    for (let enemy of enemies) {
+        if (!isColliding(cat, enemy)) continue;
+        
+        // Определяем тип столкновения
+        const collisionType = getCollisionType(cat, enemy);
+        
+        // Обработка в зависимости от типа столкновения
+        switch(collisionType) {
+            case 'TOP': // Кот атакует сверху
+                handleEnemyDamage(enemy);
+                cat.velocityY = -cat.jumpForce/2; // Отскок
+                break;
+                
+            case 'BOTTOM': // Враг сверху - урон коту
+            case 'SIDE':   // Боковое столкновение - урон коту
+                if (!cat.invincible) {
+                    cat.takeDamage();
                 }
-            }
+                break;
+        }
+    }
+    
+    // Проверка сбора монеток (без изменений)
+    checkCoinCollisions();
+}
+
+// Вспомогательные функции
+function isColliding(obj1, obj2) {
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
+}
+
+function getCollisionType(cat, enemy) {
+    const catBottom = cat.y + cat.height;
+    const enemyTop = enemy.y;
+    const overlapTop = catBottom - enemyTop;
+    
+    const catTop = cat.y;
+    const enemyBottom = enemy.y + enemy.height;
+    const overlapBottom = enemyBottom - catTop;
+    
+    // Определяем основное направление столкновения
+    if (cat.velocityY > 0 && overlapTop < 25 && overlapTop < overlapBottom) {
+        return 'TOP'; // Кот сверху врага
+    }
+    if (overlapBottom < 15 && overlapBottom < overlapTop) {
+        return 'BOTTOM'; // Кот снизу врага
+    }
+    return 'SIDE'; // Боковое столкновение
+}
+
+function handleEnemyDamage(enemy) {
+    enemy.health--;
+    if (enemy.health <= 0) {
+        enemies = enemies.filter(e => e !== enemy);
+        coins += 5;
+        updateHUD();
+    }
+}
+
+function checkCoinCollisions() {
+    for (let coin of coinsItems) {
+        if (!coin.collected && isColliding(cat, coin)) {
+            coin.collected = true;
+            coins += 1;
+            updateHUD();
             
-            // Проверка сбора монеток
-            for (let coin of coinsItems) {
-                if (!coin.collected && 
-                    cat.x + cat.width > coin.x && 
-                    cat.x < coin.x + coin.width &&
-                    cat.y + cat.height > coin.y && 
-                    cat.y < coin.y + coin.height) {
-                    
-                    coin.collected = true;
-                    coins += 1;
-                    updateHUD();
-                    
-                    if (coins % 10 === 0) {
-                        hp++;
-                        updateHUD();
-                    }
-                }
+            if (coins % 10 === 0) {
+                hp++;
+                updateHUD();
             }
         }
+    }
+}
         
         function updateEnemies() {
             for (let enemy of enemies) {
