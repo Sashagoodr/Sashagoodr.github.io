@@ -409,16 +409,23 @@
                     cat.y + cat.height > enemy.y && 
                     cat.y < enemy.y + enemy.height) {
                     
-                    // Определяем, находится ли кот преимущественно над врагом
-                    const isMostlyAbove = (cat.y + cat.height/2) < (enemy.y + enemy.height/3);
+                    // Определяем, касается ли кот врага снизу
+                    const isHittingFromBelow = (cat.y + cat.height) - enemy.y < 10 && 
+                                              cat.velocityY >= 0;
                     
-                    // Если кот преимущественно над врагом - наносим урон врагу
-                    if (isMostlyAbove) {
+                    // Если кот снизу врага - получает урон
+                    if (isHittingFromBelow && !cat.invincible) {
+                        cat.takeDamage();
+                    } 
+                    // В любом другом случае (сверху или сбоку) - враг получает урон
+                    else if (!isHittingFromBelow) {
                         // Уменьшить здоровье врага
                         enemy.health--;
                         
                         // Отскок
-                        cat.velocityY = -cat.jumpForce/2;
+                        if (cat.velocityY > 0) {
+                            cat.velocityY = -cat.jumpForce/2;
+                        }
                         
                         // Если здоровье врага закончилось - убить его и дать 5 монет
                         if (enemy.health <= 0) {
@@ -426,11 +433,6 @@
                             coins += 5;
                             updateHUD();
                         }
-                    } 
-                    // Если кот не над врагом - получает урон
-                    else if (!cat.invincible) {
-                        // Получить урон
-                        cat.takeDamage();
                     }
                 }
             }
