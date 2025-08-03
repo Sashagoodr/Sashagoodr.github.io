@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SunSocial</title>
+    <style>
+        :root {
+            --primary-color: #FFD700;
+            --secondary-color: #FFFFFF;
+            --accent-color: #FFEB3B;
+            --text-color: #333333;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 1.5rem;
+        }
+        
+        nav ul li a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: #555;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .profile-section {
+            display: flex;
+            margin-bottom: 2rem;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .profile-info {
+            padding: 2rem;
+            flex: 1;
+        }
+        
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .username {
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+        
+        .status {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .block-checker {
+            background-color: var(--accent-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        .block-checker h3 {
+            margin-top: 0;
+        }
+        
+        .block-checker input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 70%;
+            margin-right: 0.5rem;
+        }
+        
+        .block-checker button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .block-checker button:hover {
+            background-color: #FFC600;
+        }
+        
+        .result {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .blocked {
+            background-color: #FFCDD2;
+            color: #D32F2F;
+            display: block;
+        }
+        
+        .not-blocked {
+            background-color: #C8E6C9;
+            color: #388E3C;
+            display: block;
+        }
+        
+        .posts {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .post {
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .post-header {
+            padding: 1rem;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .post-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.5rem;
+        }
+        
+        .post-content {
+            padding: 1rem;
+        }
+        
+        .post-actions {
+            padding: 0.5rem 1rem;
+            border-top: 1px solid #eee;
+            display: flex;
+        }
+        
+        .post-actions button {
+            background: none;
+            border: none;
+            margin-right: 1rem;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        
+        footer {
+            background-color: var(--primary-color);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">SunSocial</div>
+        <nav>
+            <ul>
+                <li><a href="#">Главная</a></li>
+                <li><a href="#">Профиль</a></li>
+                <li><a href="#">Друзья</a></li>
+                <li><a href="#">Сообщения</a></li>
+                <li><a href="#">Настройки</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <section class="profile-section">
+            <div class="profile-info">
+                <img src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-pic">
+                <h1 class="username">Иван Иванов</h1>
+                <p class="status">Наслаждаюсь жизнью ☀️</p>
+                
+                <div class="block-checker">
+                    <h3>Проверка блокировки</h3>
+                    <p>Введите имя пользователя, чтобы проверить, заблокировали ли вы его или он вас</p>
+                    <input type="text" id="checkUsername" placeholder="Имя пользователя">
+                    <button onclick="checkBlockStatus()">Проверить</button>
+                    <div id="blockResult" class="result"></div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="posts">
+            <article class="post">
+                <div class="post-header">
+                    <img src="https://via.placeholder.com/40" alt="User" class="post-pic">
+                    <span>Мария Петрова</span>
+                </div>
+                <div class="post-content">
+                    <p>Прекрасный день для прогулки в парке! Кто со мной?</p>
+                </div>
+                <div class="post-actions">
+                    <button>❤️ 12</button>
+                    <button>💬 3</button>
+                    <button>↪️ Поделиться</button>
+                </div>
+            </article>
+            
+            <article class="post">
+                <div class="post-header">
+                    <img src="https://via.placeholder.com/40" alt="User" class="post-pic">
+                    <span>Алексей Смирнов</span>
+                </div>
+                <div class="post-content">
+                    <p>Только что закончил новый проект! Очень доволен результатом.</p>
+                    <img src="https://via.placeholder.com/300x200" alt="Project" style="width: 100%; margin-top: 0.5rem;">
+                </div>
+                <div class="post-actions">
+                    <button>❤️ 24</button>
+                    <button>💬 7</button>
+                    <button>↪️ Поделиться</button>
+                </div>
+            </article>
+            
+            <article class="post">
+                <div class="post-header">
+                    <img src="https://via.placeholder.com/40" alt="User" class="post-pic">
+                    <span>Елена Козлова</span>
+                </div>
+                <div class="post-content">
+                    <p>Рекомендую новую книгу "Путь к успеху". Очень вдохновляет!</p>
+                </div>
+                <div class="post-actions">
+                    <button>❤️ 18</button>
+                    <button>💬 5</button>
+                    <button>↪️ Поделиться</button>
+                </div>
+            </article>
+        </section>
+    </div>
+    
+    <footer>
+        <p>© 2023 SunSocial. Все права защищены.</p>
+    </footer>
+    
+    <script>
+        // Имитация базы данных блокировок
+        const blockedUsers = {
+            "петр": {blockedByYou: true, blockedYou: false},
+            "анна": {blockedByYou: false, blockedYou: true},
+            "сергей": {blockedByYou: true, blockedYou: true},
+            "тест": {blockedByYou: true, blockedYou: false}
+        };
+        
+        function checkBlockStatus() {
+            const username = document.getElementById('checkUsername').value.trim().toLowerCase();
+            const resultDiv = document.getElementById('blockResult');
+            
+            resultDiv.classList.remove('blocked', 'not-blocked');
+            
+            if (!username) {
+                resultDiv.textContent = "Пожалуйста, введите имя пользователя";
+                resultDiv.style.display = 'block';
+                resultDiv.style.backgroundColor = '#FFF9C4';
+                resultDiv.style.color = '#F57F17';
+                return;
+            }
+            
+            if (blockedUsers[username]) {
+                const status = blockedUsers[username];
+                let message = '';
+                
+                if (status.blockedByYou && status.blockedYou) {
+                    message = `Вы и пользователь ${username} заблокировали друг друга`;
+                } else if (status.blockedByYou) {
+                    message = `Вы заблокировали пользователя ${username}`;
+                } else {
+                    message = `Пользователь ${username} заблокировал вас`;
+                }
+                
+                resultDiv.textContent = message;
+                resultDiv.classList.add('blocked');
+            } else {
+                resultDiv.textContent = `Пользователь ${username} не блокировал вас, и вы не блокировали его`;
+                resultDiv.classList.add('not-blocked');
+            }
+        }
+        
+        // Инициализация страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Можно добавить дополнительную логику инициализации
+        });
+    </script>
+</body>
+</html>
